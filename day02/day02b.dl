@@ -1,0 +1,51 @@
+
+.decl command(line:number, direction:symbol, amount:number)
+.input command(filename="day02.facts",delimiter=" ")
+
+.decl last_command(line:number)
+last_command(max l : { command(l, _, _) }).
+
+.decl aim_after_command(l:number, aim:number)
+
+// initial aim
+aim_after_command(0, 0).
+
+// aim after a forward command
+aim_after_command(l, aim) :-
+  command(l, "forward", _),
+  aim_after_command(l-1, aim).
+
+// aim after a up command
+aim_after_command(l, previous_aim - amount) :-
+  command(l, "up", amount),
+  aim_after_command(l-1, previous_aim).
+
+// aim after a down command
+aim_after_command(l, previous_aim + amount) :-
+  command(l, "down", amount),
+  aim_after_command(l-1, previous_aim).
+
+.decl depth_after_command(l:number, depth:number)
+depth_after_command(0, 0).
+
+// depth after a forward command
+depth_after_command(l, previous_depth + aim * amount) :-
+  command(l, "forward", amount),
+  depth_after_command(l-1, previous_depth),
+  aim_after_command(l, aim).
+
+// depth after a up or down command
+depth_after_command(l, depth) :-
+  depth_after_command(l-1, depth),
+  ( command(l, "up", _)
+  ; command(l, "down", _)
+  ).
+
+.decl answer(c:number)
+.output answer
+
+answer( sum amount : { command(_, "forward", amount) } * final_depth) :-
+  last_command(l),
+  depth_after_command(l, final_depth).
+
+

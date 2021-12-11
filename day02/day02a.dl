@@ -1,0 +1,10 @@
+
+.decl command(line:number, direction:symbol, amount:number)
+.input command(filename="day02.facts",delimiter=" ")
+
+.decl answer(c:number)
+.output answer
+
+answer( sum amount : { command(_, "forward", amount) }
+    * ( sum amount : { command(_, "down", amount) } - (sum amount : {command(_,"up", amount)}))).
+
