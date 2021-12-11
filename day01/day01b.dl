@@ -1,0 +1,14 @@
+
+.decl measure(line:number, n:number)
+.input measure(filename="day01.facts",delimiter=" ")
+
+.decl answer(c:number)
+.output answer
+
+.decl window(first_line:number, measure_sum:number)
+window(l, a+b+c) :-
+  measure(l, a),
+  measure(l+1, b),
+  measure(l+2, c).
+
+answer(count : {window(f,sum1), window(f+1,sum2), sum1 < sum2}).

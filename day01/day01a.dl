@@ -1,0 +1,14 @@
+
+.decl measure(line:number, n:number)
+.input measure(filename="day01.facts",delimiter=" ")
+
+.decl answer(c:number)
+.output answer
+
+.decl larger_than_previous(line:number)
+larger_than_previous(line) :-
+  measure(line, n),
+  measure(line-1, m),
+  n > m.
+
+answer(count : {larger_than_previous(_) }).
