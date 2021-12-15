@@ -1,0 +1,23 @@
+
+#include "day04a.dl"
+
+.decl answer_part2(c:number)
+.output answer_part2
+
+answer_part2(called_number * unmarked_sum) :-
+  last_winning_board(board, step),
+  draw(step, called_number),
+  unmarked_sum = sum n : { board_number(board, n), draw(st, n), st > step }.
+
+.decl first_completed_sequence_by_board(board:number, seq:number, step:number)
+.output first_completed_sequence_by_board
+first_completed_sequence_by_board(board, seq, step) :-
+  step = min s : { sequence_completion_step(board, _, s) },
+  sequence_completion_step(board, seq, step).
+
+.decl last_winning_board(board:number, step:number)
+.output last_winning_board
+last_winning_board(board, step) :-
+  step = max s : { first_completed_sequence_by_board(_, _, s) },
+  first_completed_sequence_by_board(board, _, step).
+

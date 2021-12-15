@@ -1,0 +1,67 @@
+
+/** Holds if the number `num` is drawn at the `step`-th step. */
+.decl draw(step:number, num:number)
+.output draw
+
+/** Holds if the input line `line` contains the five numbers `c1` to `c5`. */
+.decl boardrow(line:number, c1:number, c2:number, c3:number, c4:number, c5:number)
+.output boardrow
+
+.input boardrow(filename="boardrow.facts", delimiter=" ")
+.input draw(filename="draw.facts", delimiter=" ")
+//.input boardrow(filename="sample_boardrow.facts", delimiter=" ")
+//.input draw(filename="sample_draw.facts", delimiter=" ")
+
+.decl answer_part1(c:number)
+.output answer_part1
+
+answer_part1(called_number * unmarked_sum) :-
+  first_completed_sequence(board, _, step),
+  draw(step, called_number),
+  unmarked_sum = sum n : { board_number(board, n), draw(st, n), st > step }.
+
+/** Holds if the input line `line` is part of the board `board`. */
+.decl line_board(line:number, board:number)
+line_board(line, board) :-
+  boardrow(line, _, _, _, _, _),
+  board = ((line - 1) / 5).
+
+/** Holds if the sum of number on board `board` is `val`. */
+.decl board_sum(board:number, val:number)
+board_sum(board, val) :-
+  line_board(_, board),
+  val = sum num : { sequence(board, seq, num), seq >= 0 }.
+
+/** Holds if `num` is a number that appears in the row or column `seq` of the board `board`. */
+.decl sequence(board:number, seq:number, num:number)
+sequence(board, line, c1),
+sequence(board, line, c2),
+sequence(board, line, c3),
+sequence(board, line, c4),
+sequence(board, line, c5),
+sequence(board, -1, c1),
+sequence(board, -2, c2),
+sequence(board, -3, c3),
+sequence(board, -4, c4),
+sequence(board, -5, c5) :-
+  line_board(line, board),
+  boardrow(line, c1, c2, c3, c4, c5).
+
+/** Holds if the number `num` appears on the board `board`. */
+.decl board_number(board:number, num:number)
+board_number(board, num) :-
+  sequence(board, _, num).
+
+/** Holds if sequence `seq` of board `board` is completed at draw step `step`. */
+.decl sequence_completion_step(board:number, seq:number, step:number) btree_delete
+.output sequence_completion_step
+sequence_completion_step(board, seq, step) :-
+  sequence(board, seq, _),
+  step = max s : { sequence(board, seq, n), draw(s, n) }.
+
+/** Keep only the fact with the smallest completion step. */
+.decl first_completed_sequence(board:number, seq:number, step:number)
+first_completed_sequence(board, seq, step) :-
+  step = min s : { sequence_completion_step(_, _, s) },
+  sequence_completion_step(board, seq, step).
+
