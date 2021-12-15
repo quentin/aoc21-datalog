@@ -1,0 +1,31 @@
+
+.decl report(bits:symbol)
+.input report(filename="day03.facts",delimiter=" ")
+
+.decl bitpos(pos:number)
+bitpos(pos) :- pos = range(0, 12, 1).
+
+.decl most_common_bit(position:number, most_common:number)
+most_common_bit(pos, most_common) :-
+  //pos = range(0, 12, 1), // crashes
+  bitpos(pos),
+  ones = count : { report(bits), substr(bits, 11 - pos, 1) = "1" },
+  zeroes = count : { report(bits), substr(bits, 11 - pos, 1) = "0" },
+  ( (ones > zeroes, most_common = 1)
+  ; (zeroes > ones, most_common = 0)
+  ).
+
+.decl gamma_rate(g:number)
+gamma_rate(g) :-
+  g = sum u : { most_common_bit(pos, b), u = b bshl pos }.
+
+.decl epsilon_rate(e:number)
+epsilon_rate(e) :-
+  e = sum u : { most_common_bit(pos, b), u = (b lxor 1) bshl pos }.
+
+.decl answer(c:number)
+.output answer
+
+answer(g * e) :-
+  gamma_rate(g),
+  epsilon_rate(e).

@@ -1,0 +1,101 @@
+
+/** Holds if `bits` is a row of the input report. */
+.decl report(bits:symbol)
+.input report(filename="day03.facts",delimiter=" ")
+//.input report(filename="sample.facts",delimiter=" ")
+
+/** Holds if the answer is `c`. */
+.decl answer(c:number)
+.output answer
+answer(oxy*co2) :-
+  oxygen_generator_rating(oxy),
+  co2_scrubber_rating(co2).
+
+/** Holds if `len` is the number of "bits" in a row of the input report. */
+.decl bitlen(len:number)
+bitlen(len) :- len = max l : {report(bits), l = strlen(bits)}.
+
+/** Holds if `pos` is a possible bit position within a report row. */
+.decl bitpos(pos:number)
+bitpos(pos) :- pos = range(0, len, 1), bitlen(len).
+
+/** Holds if the report contains a row `bits` where the `pos`-th bit (from the left) is equal to `bit` (either 0 or 1) and
+ * `pow2` is `2^pos`.
+ */
+.decl report_bit(bits:symbol, pos:number, bit:number, pow2:number)
+report_bit(bits, pos, bit, pow2) :-
+  report(bits),
+  bitpos(pos),
+  bitlen(len),
+  bit = to_number(substr(bits, len-1-pos, 1)),
+  pow2 = bit bshl pos.
+
+/** Holds if the report row `bits` has decimal value `val`. */
+.decl report_val(bits:symbol, val:number)
+report_val(bits, val) :-
+  report(bits),
+  val = sum pow2 : { report_bit(bits, _, _, pow2) }.
+
+.decl oxy_constraint(pos:number, lower_bound:number, upper_bound:number)
+oxy_constraint(len, 0, 1 bshl len) :-
+  bitlen(len).
+
+oxy_constraint(pos, lb, ub) :-
+  bitpos(pos),
+  oxy_constraint(pos+1, prev_lb, prev_ub),
+  pivot = prev_lb + (1 bshl pos),
+  below = count : { report_val(_,v), v >= prev_lb, v < pivot },
+  on_or_above = count : { report_val(_,v), v < prev_ub, v >= pivot },
+  below + on_or_above > 1,
+  ( ( below > on_or_above, lb = prev_lb, ub = pivot )
+  ; ( below <= on_or_above, lb = pivot, ub = prev_ub)
+  ).
+
+oxy_constraint(pos, lb, ub) :-
+  bitpos(pos),
+  oxy_constraint(pos+1, prev_lb, prev_ub),
+  count : { report_val(_,v), v >= prev_lb, v < prev_ub } = 1,
+  report_val(_,unique),
+  unique >= prev_lb,
+  unique < prev_ub,
+  lb = unique,
+  ub = unique+1.
+
+.decl oxygen_generator_rating(val:number)
+oxygen_generator_rating(v) :-
+  oxy_constraint(0, v, _),
+  report_val(_, v).
+
+// same as "oxygen generator rating" computation rules, but the
+// interval selection logic is reversed accordingly to the
+// "co2 scrubber rating" computation rules.
+.decl co2_constraint(pos:number, lower_bound:number, upper_bound:number)
+co2_constraint(len, 0, 1 bshl len) :-
+  bitlen(len).
+
+co2_constraint(pos, lb, ub) :-
+  bitpos(pos),
+  co2_constraint(pos+1, prev_lb, prev_ub),
+  pivot = prev_lb + (1 bshl pos),
+  below = count : { report_val(_,v), v >= prev_lb, v < pivot },
+  on_or_above = count : { report_val(_,w), w < prev_ub, w >= pivot },
+  below + on_or_above > 1,
+  ( ( below <= on_or_above, lb = prev_lb, ub = pivot )
+  ; ( below > on_or_above, lb = pivot, ub = prev_ub)
+  ).
+
+co2_constraint(pos, lb, ub) :-
+  bitpos(pos),
+  co2_constraint(pos+1, prev_lb, prev_ub),
+  count : { report_val(_,v), v >= prev_lb, v < prev_ub } = 1,
+  report_val(_,unique),
+  unique >= prev_lb,
+  unique < prev_ub,
+  lb = unique,
+  ub = unique+1.
+
+.decl co2_scrubber_rating(val:number)
+co2_scrubber_rating(v) :-
+  co2_constraint(0, v, _),
+  report_val(_, v).
+
