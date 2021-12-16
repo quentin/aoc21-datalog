@@ -1,0 +1,16 @@
+
+#include "day05a.dl"
+
+// diagonal vent
+vent(x1,y1,x2,y2,x,y) :-
+  coords(x1,y1,x2,y2),
+  ( ( x1 < x2, xdir = 1, steps = x2 - x1 + 1 )
+  ; ( x1 > x2, xdir = -1, steps = x1 - x2 + 1 )
+  ),
+  ( ( y1 < y2, ydir = 1, steps = y2 - y1 + 1 )
+  ; ( y1 > y2, ydir = -1, steps = y1 - y2 + 1 )
+  ),
+  step = range(0, steps, 1),
+  x = x1 + step * xdir,
+  y = y1 + step * ydir.
+

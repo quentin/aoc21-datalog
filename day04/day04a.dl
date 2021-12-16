@@ -1,11 +1,9 @@
 
 /** Holds if the number `num` is drawn at the `step`-th step. */
 .decl draw(step:number, num:number)
-.output draw
 
 /** Holds if the input line `line` contains the five numbers `c1` to `c5`. */
 .decl boardrow(line:number, c1:number, c2:number, c3:number, c4:number, c5:number)
-.output boardrow
 
 .input boardrow(filename="boardrow.facts", delimiter=" ")
 .input draw(filename="draw.facts", delimiter=" ")

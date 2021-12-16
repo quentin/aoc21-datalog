@@ -1,0 +1,45 @@
+
+/** Holds if there is a segment from `x1`,`y1` to `x2`,`y2` in the inputs. */
+.decl coords(x1:number, y1:number, x2:number, y2:number)
+.input coords(filename="coords.facts", delimiter=" ")
+//.input coords(filename="sample.facts", delimiter=" ")
+
+/** Holds if the answer is `c`. */
+.decl answer(c:number)
+.output answer
+answer(c) :-
+  c = count : { overlapping(_,_) }.
+
+/** Holds if the segment from `x1`,`y1` to `x2`,`y2` has a vent point at `x`,`y`. */
+.decl vent(x1:number, y1:number, x2:number, y2:number, x:number, y:number)
+
+// vertical vent
+vent(x,y1,x,y2,x,y) :-
+  coords(x,y1,x,y2),
+  y1 <= y2,
+  y = range(y1, y2+1, 1).
+
+// vertical vent
+vent(x,y1,x,y2,x,y) :-
+  coords(x,y1,x,y2),
+  y2 <= y1,
+  y = range(y2, y1+1, 1).
+
+// horizontal vent
+vent(x1,y,x2,y,x,y) :-
+  coords(x1,y,x2,y),
+  x1 <= x2,
+  x = range(x1, x2+1, 1).
+
+// horizontal vent
+vent(x1,y,x2,y,x,y) :-
+  coords(x1,y,x2,y),
+  x2 <= x1,
+  x = range(x2, x1+1, 1).
+
+/** Holds if at least two segments overlap at `x`,`y`. */
+.decl overlapping(x:number, y:number)
+overlapping(x,y) :-
+  vent(_,_,_,_,x,y),
+  count : { vent(_,_,_,_,x,y) } > 1.
+
