@@ -1,0 +1,31 @@
+
+.type Fish <: symbol
+.type Timer <: unsigned
+.type Day <: unsigned
+
+#define DAYS 80
+
+.decl initial(fish:Fish, timer:Timer)
+//.input initial(filename="sample.facts", delimiter=" ")
+.input initial(filename="initial.facts", delimiter=" ")
+
+.decl after(day:Day, fish:Fish, timer:Timer)
+after(0, cat(fish,"-0"), timer) :-
+  initial(fish, timer).
+
+after(day+1, fish, timer-1) :-
+  day < DAYS,
+  after(day, fish, timer),
+  timer > 0.
+
+after(day+1, fish, 6),
+after(day+1, newfish, 8) :-
+  day < DAYS,
+  after(day, fish, 0),
+  newfish = cat(fish,cat("-",to_string(day))).
+
+.decl answer(c:number)
+.output answer
+answer(c) :-
+  c = count : { after(DAYS, _, _) }.
+

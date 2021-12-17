@@ -1,0 +1,42 @@
+
+// because why not
+.type Fish <: symbol
+.type Timer <: unsigned
+.type Day <: unsigned
+
+#define DAYS 256
+
+.decl initial(fish:Fish, timer:Timer)
+.input initial(filename="initial.facts", delimiter=" ")
+
+.decl answer(c:number)
+.output answer
+answer(c) :-
+  c = sum cnt : { after(DAYS, _, cnt) }.
+
+/** Holds if after day `day` there are `cnt` fishes with the same internal timer `timer`. */
+.decl after(day:Day, timer:Timer, cnt:number)
+.output after
+// bootstrap with intial state
+after(0, timer, cnt) :-
+  initial(_, timer),
+  cnt = count : { initial(_, timer) }.
+// bootstrap: filling facts for timers with zero fish
+after(0, timer, 0) :-
+  timer = range(0, 9, 1),
+  !initial(_, timer).
+
+after(day+1, timer-1, cnt) :-
+  day < DAYS,
+  after(day, timer, cnt),
+  timer > 0,
+  timer != 7.
+
+after(day+1, 6, givebirth+ageing) :-
+  day < DAYS,
+  after(day, 0, givebirth),
+  after(day, 7, ageing).
+
+after(day+1, 8, birth) :-
+  day < DAYS,
+  after(day, 0, birth).
