@@ -1,0 +1,24 @@
+
+.decl position(crab:number, pos:number)
+.input position(filename="position.facts", delimiter=" ")
+//.input position(filename="sample.facts", delimiter=" ")
+
+/** Holds if there are `cnt` crabs at initial position `pos`. */
+.decl positions(pos:number, cnt:number)
+positions(pos, cnt) :-
+  position(_, pos),
+  cnt = count : { position(_, pos) }.
+
+.decl possible(pos:number)
+possible(pos) :- pos = range(0,2000), position(_, x), pos <= x.
+
+.decl cost(pos:number, fuel:number)
+cost(pos, fuel) :-
+  possible(pos),
+  fuel = sum n : { positions(p, cnt), pos < p, steps = (p - pos), n = cnt * steps*(steps+1)/2 }
+       + sum n : { positions(p, cnt), pos > p, steps = (pos - p), n = cnt * steps*(steps+1)/2 }.
+
+.decl answer(c:number)
+.output answer
+answer(c) :-
+  c = min fuel : { cost(_, fuel) }.
