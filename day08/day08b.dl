@@ -1,0 +1,139 @@
+
+.decl codes(i:number, pattern:symbol)
+.input codes(filename="codes.facts", delimiter=" ")
+
+.decl observations(i:number, pattern:symbol)
+.input observations(filename="observations.facts", delimiter= " ")
+
+.decl answer(c:number)
+.output answer
+answer(c) :-
+  c = sum value : { decoded(_, value) }.
+
+/** Holds if at line `line` the `idx`-th code has pattern `pattern` and uses `signal` signal. */
+.decl code(line:number, idx:number, pattern:symbol, signal:symbol)
+code(line, idx, pattern, signal) :-
+  codes(i, pattern),
+  line = (i - 1) / 4,
+  idx = (i - 1) % 4,
+  at = range(0, strlen(pattern)),
+  signal = substr(pattern, at, 1).
+
+/** Holds if at line `line` the pattern `pattern` uses signal `signal`. */
+.decl obs(line:number, pattern:symbol, signal: symbol)
+obs(line, pattern, signal) :-
+  observations(i, pattern),
+  line = (i - 1) / 10,
+  at = range(0, strlen(pattern)),
+  signal = substr(pattern, at, 1).
+
+/** Holds if two pattern on the same observation line have `cnt` common signals. */
+.decl common_signals(line:number, pattern1:symbol, pattern2:symbol, cnt:number)
+common_signals(line, p1, p2, cnt) :-
+  obs(line, p1, _),
+  obs(line, p2, _),
+  p1 != p2,
+  cnt = count : { obs(line, p1, s), obs(line, p2, s) }.
+
+/** Holds if both patterns are equivalent at line. */
+.decl equiv_pattern(line:number, p:symbol, q:symbol)
+equiv_pattern(line, p2, p1),
+equiv_pattern(line, p1, p2) :-
+  obs(line, p1, _),
+  code(line, _, p2, _),
+  len = strlen(p1),
+  len = strlen(p2),
+  len = count : { obs(line, p1, s), code(line, _, p2, s) }.
+
+/** Holds if the pattern `pattern` at observation line `line` is interpreted as digit `digit`. */
+.decl interpr(line:number, pattern:symbol, digit:number)
+
+// digit 1 is the only two-signals digit.
+interpr(line, pattern, 1) :-
+  obs(line, pattern, _),
+  strlen(pattern) = 2.
+
+// digit 4 is the only four-signals digit.
+interpr(line, pattern, 4) :-
+  obs(line, pattern, _),
+  strlen(pattern) = 4.
+
+// digit 7 is the only three-signals digit.
+interpr(line, pattern, 7) :-
+  obs(line, pattern, _),
+  strlen(pattern) = 3.
+
+// digit 8 is the only seven-signals digit.
+interpr(line, pattern, 8) :-
+  obs(line, pattern, _),
+  strlen(pattern) = 7.
+
+// digit 2 has 5 signals and is the only five-signals digit that shares 2
+// signals with digit 4.
+interpr(line, pattern_2, 2) :-
+  interpr(line, pattern_4, 4),
+  obs(line, pattern_2, _),
+  strlen(pattern_2) = 5,
+  common_signals(line, pattern_4, pattern_2, 2).
+
+// digit 3 has 5 signals and is the only five-signals digit that shares 2
+// signals with digit 1.
+interpr(line, pattern_3, 3) :-
+  interpr(line, pattern_1, 1),
+  obs(line, pattern_3, _),
+  strlen(pattern_3) = 5,
+  common_signals(line, pattern_3, pattern_1, 2).
+
+// digit 5 has 5 signals and is the only five-signals digit that shares
+// 1 signal with digit 1 and 3 signals with digit 4.
+interpr(line, pattern_5, 5) :-
+  interpr(line, pattern_1, 1),
+  interpr(line, pattern_4, 4),
+  obs(line, pattern_5, _),
+  strlen(pattern_5) = 5,
+  common_signals(line, pattern_5, pattern_1, 1),
+  common_signals(line, pattern_5, pattern_4, 3).
+
+// digit 6 has 6 signals and is the only six-signals digit that shares
+// 1 signal with digit 1.
+interpr(line, pattern_6, 6) :-
+  interpr(line, pattern_1, 1),
+  obs(line, pattern_6, _),
+  strlen(pattern_6) = 6,
+  common_signals(line, pattern_6, pattern_1, 1).
+
+// digit 9 has 6 signals and is the only six-signals digit that shares
+// 4 signals with digit 4.
+interpr(line, pattern_9, 9) :-
+  interpr(line, pattern_4, 4),
+  obs(line, pattern_9, _),
+  strlen(pattern_9) = 6,
+  common_signals(line, pattern_9, pattern_4, 4).
+
+// digit 0 has 6 signals and is the only six-signals digit that shares
+// 2 signals with digit 1 and 3 signals with digit 4.
+interpr(line, pattern_0, 0) :-
+  interpr(line, pattern_1, 1),
+  interpr(line, pattern_4, 4),
+  obs(line, pattern_0, _),
+  strlen(pattern_0) = 6,
+  common_signals(line, pattern_0, pattern_1, 2),
+  common_signals(line, pattern_0, pattern_4, 3).
+
+/** Holds if at line `line` the decoded decimal value is `value`. */
+.decl decoded(line: number, value:number)
+decoded(line, value) :-
+  code(line, 0, p0, _),
+  interpr(line, q0, v0),
+  equiv_pattern(line, p0, q0),
+  code(line, 1, p1, _),
+  interpr(line, q1, v1),
+  equiv_pattern(line, p1, q1),
+  code(line, 2, p2, _),
+  interpr(line, q2, v2),
+  equiv_pattern(line, p2, q2),
+  code(line, 3, p3, _),
+  interpr(line, q3, v3),
+  equiv_pattern(line, p3, q3),
+  value = v0 * 1000 + v1*100 + v2*10 + v3.
+

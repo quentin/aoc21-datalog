@@ -1,0 +1,12 @@
+
+.decl codes(line:number, pattern:symbol)
+.input codes(filename="codes.facts", delimiter=" ")
+
+.decl answer(c:number)
+.output answer
+answer(c) :-
+  c = count : { codes(_,pattern), strlen(pattern) = 2}
+    + count : { codes(_,pattern), strlen(pattern) = 3}
+    + count : { codes(_,pattern), strlen(pattern) = 4}
+    + count : { codes(_,pattern), strlen(pattern) = 7}.
+
