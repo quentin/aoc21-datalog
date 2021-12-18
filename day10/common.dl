@@ -1,0 +1,87 @@
+
+.decl line(i:number, content:symbol)
+.input line(filename="navsys.facts", delimiter=" ")
+//.input line(filename="sample.facts", delimiter=" ")
+
+/** Holds if there is character `c` at `position` line `line` of the input navigation system. */
+.decl char(line:number, position:number, c:symbol)
+char(i, pos, c) :-
+  line(i, content),
+  len = strlen(content),
+  pos = range(0, len),
+  c = substr(content, pos, 1).
+
+/** The kinds of brackets */
+.type Bracket = Round {} | Curly {} | Square {} | Angle {}
+
+/** Holds if the line `line` contains an opening `bracket` at position `position`.*/
+.decl open(line:number, position:number, bracket:Bracket)
+open(i, pos, br) :-
+  char(i, pos, c),
+  ( ( c = "(", br = $Round() )
+  ; ( c = "{", br = $Curly() )
+  ; ( c = "[", br = $Square() )
+  ; ( c = "<", br = $Angle() )
+  ).
+
+/** Holds if the line `line` contains a closing `bracket` at position `position`.*/
+.decl close(line:number, position:number, bracket:Bracket)
+close(i, pos, br) :-
+  char(i, pos, c),
+  ( ( c = ")", br = $Round() )
+  ; ( c = "}", br = $Curly() )
+  ; ( c = "]", br = $Square() )
+  ; ( c = ">", br = $Angle() )
+  ).
+
+/** Holds if there is a valid chunk at line `line` with an brackets of `bracket` kind
+ opening at position `opening` and closing at position `closing`. */
+.decl valid_chunk(line:number, opening:number, closing:number, bracket:Bracket)
+
+/** Holds if there is a valid range of chunks at line `line` where the first
+ * chunk in the range opens at position `from` and the last chunk in the range
+ * closes at position `to`.
+ */
+.decl valid_range(line:number, from:number, to:number)
+
+/// bootstrap with atomic chunks
+valid_chunk(line, opening, opening+1, br) :-
+  open(line, opening, br),
+  close(line, opening+1, br).
+
+/// make a valid range from a valid chunk
+valid_range(line, from, to) :-
+  valid_chunk(line, from, to, _).
+
+/// make a valid range by merging two consecutive valid ranges.
+valid_range(line, from, to) :-
+  valid_range(line, from, mid),
+  valid_range(line, mid+1, to).
+
+/// make a valid chunk around an existing valid range
+valid_chunk(line, op-1, cl+1, br) :-
+  valid_range(line, op, cl),
+  open(line, op-1, br),
+  close(line, cl+1, br).
+
+/** Holds if the line `line` contains a closing bracket of the wrong `bracket` kind at `position` */
+.decl invalid_close(line:number, position:number, bracket:Bracket)
+invalid_close(line, cl+1, cbr) :-
+  valid_range(line, op, cl),
+  open(line, op-1, obr),
+  close(line, cl+1, cbr),
+  obr != cbr.
+
+/** Holds if the first invalid close bracket at line `line` is at position `position`. */
+.decl first_invalid_close(line:number, position:number, bracket:Bracket)
+first_invalid_close(line, pos, br) :-
+  invalid_close(line, pos, br),
+  count : { invalid_close(line, p, _), p < pos } = 0.
+
+/** Holds if the score for a `bracket` is `score`. */
+.decl bracket_score(bracket:Bracket, score:number)
+bracket_score($Round(), 3).
+bracket_score($Square(), 57).
+bracket_score($Curly(), 1197).
+bracket_score($Angle(), 25137).
+

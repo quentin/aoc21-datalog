@@ -1,0 +1,53 @@
+
+#include "common.dl"
+
+.decl answer(c:number)
+.output answer
+answer(score) :-
+  fix_score(_,_,score),
+  count : { fix_score(_,_,less), less < score }
+  = count : { fix_score(_,_,more), more > score }.
+
+/** Holds if `line` is incomplete. */
+.decl incomplete(line:number)
+/// any line that is not invalid is incomplete
+incomplete(i) :-
+  line(i, _),
+  !invalid_close(i, _, _).
+
+/** Holds if the line `line` needs a closing `bracket` to fix the opening `bracket` at located at `from`. */
+.decl fix(line:number, from:number, bracket:Bracket)
+fix(line, from, br) :-
+  incomplete(line),
+  open(line, from, br),
+  !valid_chunk(line, from, _, _).
+
+/** Holds if the line `line` is fixed by appending a `bracket`. */
+.decl sorted_fix(line:number, order:number, bracket:Bracket)
+sorted_fix(line, order, br) :-
+  fix(line, from, br),
+  order = count : { fix(line, f, _), f > from }.
+
+/** Holds if the score for fixing a `bracket` is `score`. */
+.decl fix_bracket_score(bracket:Bracket, score:number)
+fix_bracket_score($Round(), 1).
+fix_bracket_score($Square(), 2).
+fix_bracket_score($Curly(), 3).
+fix_bracket_score($Angle(), 4).
+
+.decl fix_score(line:number, order:number, accumulated_score:number) btree_delete
+/// bootstrap with first fix
+fix_score(line, 0, score) :-
+  sorted_fix(line, 0, br),
+  fix_bracket_score(br, score).
+
+/// accumulate score by applying fixes in order
+fix_score(line, order+1, prev_score * 5 + score) :-
+  fix_score(line, order, prev_score),
+  sorted_fix(line, order+1, br),
+  fix_bracket_score(br, score).
+
+/// only keep the score for the latest fix
+fix_score(line, order, score) <= fix_score(line, order2, score2) :-
+  order <= order2.
+

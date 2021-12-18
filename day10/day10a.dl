@@ -1,0 +1,13 @@
+
+#include "common.dl"
+
+.decl answer(c:number)
+.output answer
+answer(c) :-
+  c = sum score : {
+    // it is important to witness the `line`
+    first_invalid_close(line, _, br),
+    // binds `line` to avoid a warning
+    line >= 0,
+    bracket_score(br, score) }.
+
