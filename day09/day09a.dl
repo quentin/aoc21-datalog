@@ -1,0 +1,8 @@
+
+#include "common.dl"
+
+.decl answer(c:number)
+.output answer
+answer(c) :-
+  c = sum risk : { low_point(_,_,h), risk = h + 1 }.
+

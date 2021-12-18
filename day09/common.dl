@@ -1,0 +1,29 @@
+
+.decl heightline(i:number, heights:symbol)
+.input heightline(filename="heightline.facts", delimiter=" ")
+
+/** Holds if there exist a location `x`,`y` whith height `height`. */
+.decl heightmap(x:number, y:number, height:number)
+heightmap(x,y,height) :-
+  heightline(i, heights),
+  x = range(0, strlen(heights)),
+  y = i - 1,
+  height = to_number(substr(heights, x, 1)).
+
+/** Holds if there exist a neighbor of location `x`,`y` whith height `height`. */
+.decl neighbor(x:number, y:number, height:number)
+neighbor(x, y, h) :-
+  heightmap(x,y,_),
+  ( (nx = x,  ny = y - 1)
+  ; (nx = x,  ny = y + 1)
+  ; (ny = y,  nx = x - 1)
+  ; (ny = y,  nx = x + 1)
+  ),
+  heightmap(nx,ny,h).
+
+/** Holds if there is a low-point of height `height` at location `x`,`y`. */
+.decl low_point(x:number, y:number, height:number)
+low_point(x,y,h) :-
+  heightmap(x,y,h),
+  h < min nh : { neighbor(x,y,nh) }.
+

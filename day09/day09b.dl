@@ -1,0 +1,47 @@
+
+#include "common.dl"
+
+.type Loc = [x:number, y:number]
+
+.decl answer(c:number)
+.output answer
+answer(c) :-
+  c = s1 * s2 * s3,
+  basin_order(l1, 0),
+  basin_size(l1, s1),
+  basin_order(l2, 1),
+  basin_size(l2, s2),
+  basin_order(l3, 2),
+  basin_size(l3, s3).
+
+/** Holds if the location `loc` is part of the basin with low-point `lowpoint`. */
+.decl basin(lowpoint:Loc, loc:Loc)
+
+/// boostrap basin with its low-point.
+basin([x,y], [x,y]) :-
+  low_point(x,y,_).
+
+/// extend basin to neighbor locations
+basin([lx,ly], [nx,ny]) :-
+  basin([lx,ly], [x,y]),
+  ( (nx = x,  ny = y - 1)
+  ; (nx = x,  ny = y + 1)
+  ; (ny = y,  nx = x - 1)
+  ; (ny = y,  nx = x + 1)
+  ),
+  heightmap(nx,ny,h),
+  h < 9.
+
+/** Holds if basin with low-point `lowpoint` contains `size` locations. */
+.decl basin_size(lowpoint:Loc, size:number)
+basin_size(lp, sz) :-
+  low_point(x,y,_),
+  lp = [x,y],
+  sz = count : { basin(lp, _) }.
+
+/** Holds if there are `desc` basins larger than the basing with low-point `lowpoint`. */
+.decl basin_order(lowpoint:Loc, desc:number)
+basin_order(lp, desc) :-
+  basin_size(lp, sz),
+  desc = count : { basin_size(_, s), s > sz }.
+
